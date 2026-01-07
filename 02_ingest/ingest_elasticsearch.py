@@ -2,7 +2,7 @@
 Bulk ingest pre-processed Wikipedia chunks into Elasticsearch Cloud.
 
 Usage:
-    python elasticsearch.py
+    python ingest_elasticsearch.py
 
 Environment variables:
     ELASTICSEARCH_ENDPOINT - Elasticsearch Cloud endpoint URL
@@ -25,12 +25,34 @@ INDEX_NAME = os.getenv("INDEX_NAME").lower()
 
 EMBEDDING_DIM = 384
 DATA_DIR = Path(__file__).parent.parent / "data" / "converted"
+PROGRESS_FILE = Path(__file__).parent / "ingest_elasticsearch_done.txt"
 
 
-def create_index(client: Elasticsearch):
-    """Create index with dense_vector mapping if it doesn't exist."""
+def load_completed_batches() -> set[str]:
+    """Load set of already completed batch filenames."""
+    if not PROGRESS_FILE.exists():
+        return set()
+    return set(PROGRESS_FILE.read_text().strip().split("\n"))
+
+
+def mark_batch_complete(filename: str):
+    """Append completed batch filename to progress file."""
+    with open(PROGRESS_FILE, "a") as f:
+        f.write(f"{filename}\n")
+
+
+def create_or_prepare_index(client: Elasticsearch):
+    """Create index or prepare existing index for bulk ingestion."""
     if client.indices.exists(index=INDEX_NAME):
         print(f"Index '{INDEX_NAME}' already exists")
+        # Disable refresh and replicas for faster ingestion
+        print("Disabling refresh and replicas for ingestion...")
+        client.indices.put_settings(index=INDEX_NAME, body={
+            "index": {
+                "refresh_interval": "-1",
+                "number_of_replicas": 0
+            }
+        })
         return
 
     mappings = {
@@ -59,24 +81,42 @@ def create_index(client: Elasticsearch):
     print(f"Created index '{INDEX_NAME}' (refresh disabled, 0 replicas)")
 
 
-def generate_actions(batch_files: list[Path]):
-    """Generate bulk actions from JSONL batch files."""
-    for filepath in batch_files:
-        print(f"Processing {filepath.name}")
+def generate_actions_for_batch(filepath: Path):
+    """Generate bulk actions from a single JSONL batch file."""
+    with open(filepath, 'r') as f:
+        for line in f:
+            doc = json.loads(line)
 
-        with open(filepath, 'r') as f:
-            for line in f:
-                doc = json.loads(line)
+            # Skip index action lines (they have "index" key)
+            if "index" in doc:
+                continue
 
-                # Skip index action lines (they have "index" key)
-                if "index" in doc:
-                    continue
+            yield {
+                "_index": INDEX_NAME,
+                "_id": doc["id"],
+                "_source": doc
+            }
 
-                yield {
-                    "_index": INDEX_NAME,
-                    "_id": doc["id"],
-                    "_source": doc
-                }
+
+def ingest_batch(client: Elasticsearch, filepath: Path) -> tuple[int, int]:
+    """Ingest a single batch file. Returns (success_count, error_count)."""
+    success_count = 0
+    error_count = 0
+
+    for ok, result in parallel_bulk(
+        client,
+        generate_actions_for_batch(filepath),
+        chunk_size=1000,
+        thread_count=1,
+        raise_on_error=False
+    ):
+        if ok:
+            success_count += 1
+        else:
+            error_count += 1
+            print(f"Error: {result}")
+
+    return success_count, error_count
 
 
 def main():
@@ -92,36 +132,40 @@ def main():
     info = client.info()
     print(f"Connected to Elasticsearch: {info['version']['number']}")
 
-    # Create index
-    create_index(client)
+    # Create or prepare index
+    create_or_prepare_index(client)
 
-    # Get batch files
-    batch_files = sorted(DATA_DIR.glob("elasticsearch_batch_*.jsonl"))
-    print(f"Found {len(batch_files)} batch files")
+    # Get batch files and filter out completed ones
+    all_batch_files = sorted(DATA_DIR.glob("elasticsearch_batch_*.jsonl"))
+    completed = load_completed_batches()
+    batch_files = [f for f in all_batch_files if f.name not in completed]
 
-    # Bulk ingest with progress tracking
-    success_count = 0
-    error_count = 0
+    print(f"Found {len(all_batch_files)} total batch files")
+    print(f"Skipping {len(completed)} already completed batches")
+    print(f"Processing {len(batch_files)} remaining batches")
 
-    for ok, result in parallel_bulk(
-        client,
-        generate_actions(batch_files),
-        chunk_size=1000,
-        thread_count=4,
-        raise_on_error=False
-    ):
-        if ok:
-            success_count += 1
-        else:
-            error_count += 1
-            print(f"Error: {result}")
+    if not batch_files:
+        print("Nothing to ingest!")
+        return
 
-        if success_count % 10000 == 0:
-            print(f"Progress: {success_count:,} documents indexed")
+    # Ingest each batch and track progress
+    total_success = 0
+    total_errors = 0
 
-    print(f"\nIngestion complete: {success_count:,} documents indexed")
-    if error_count:
-        print(f"Errors: {error_count:,}")
+    for i, filepath in enumerate(batch_files):
+        print(f"[{i+1}/{len(batch_files)}] Processing {filepath.name}")
+
+        success, errors = ingest_batch(client, filepath)
+        total_success += success
+        total_errors += errors
+
+        # Mark batch as complete
+        mark_batch_complete(filepath.name)
+        print(f"  -> {success:,} docs indexed, {errors} errors")
+
+    print(f"\nIngestion complete: {total_success:,} documents indexed")
+    if total_errors:
+        print(f"Total errors: {total_errors:,}")
 
     # Restore normal settings
     print("Restoring index settings...")

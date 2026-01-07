@@ -6,6 +6,7 @@ Benchmarking cloud vector database providers using Wikipedia dataset with naive 
 
 ```bash
 poetry install
+poetry run pre-commit install  # Strip notebook outputs on commit
 cp .env.example .env  # Edit with your credentials
 ```
 
