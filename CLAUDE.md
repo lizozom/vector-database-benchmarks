@@ -12,10 +12,11 @@ Evaluate vector databases on a level playing field by using **default configurat
 ## Benchmark Methodology
 
 ### Dataset
-- **Source**: Wikipedia dataset (~200k articles) https://www.kaggle.com/datasets/jjinho/wikipedia-20230701
+- **Source**: Wikipedia dataset (~250k articles, A-prefixed subset) from https://www.kaggle.com/datasets/jjinho/wikipedia-20230701
 - **Chunking**: Fixed-size chunks (1000 chars with 100 char overlap)
-- **Embedding Model**: `all-MiniLM-L6-v2` (384 dimensions)
-- **Pre-computed embeddings**: Stored in `converted/` as batches
+- **Embedding Model**: `all-MiniLM-L6-v2` (384 dimensions, max 256 tokens)
+  - 1000 chars ≈ 200-280 tokens, reasonably within model limit
+- **Pre-computed embeddings**: Stored in `data/converted/` as JSONL batches
 
 ### Evaluation Criteria
 | Criterion | Description |

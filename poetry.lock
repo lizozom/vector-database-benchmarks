@@ -2433,14 +2433,69 @@ files = [
 
 [[package]]
 name = "packaging"
-version = "25.0"
+version = "24.2"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
-    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
+    {file = "packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759"},
+    {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
+]
+
+[[package]]
+name = "pinecone"
+version = "8.0.0"
+description = "Pinecone client and SDK"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "pinecone-8.0.0-py3-none-any.whl", hash = "sha256:95f714a496a91d80f3405165aedfea76ca8ac16e51e618df0434241838e353f8"},
+    {file = "pinecone-8.0.0.tar.gz", hash = "sha256:feca7ff607706c09ffbd127ec93fa3b7110896b30c0d7a57672da73c69698d53"},
+]
+
+[package.dependencies]
+certifi = ">=2019.11.17"
+orjson = ">=3.0.0"
+pinecone-plugin-assistant = ">=3.0.1,<4.0.0"
+pinecone-plugin-interface = ">=0.0.7,<0.1.0"
+python-dateutil = ">=2.5.3"
+typing-extensions = ">=3.7.4"
+urllib3 = {version = ">=1.26.5", markers = "python_version >= \"3.12\""}
+
+[package.extras]
+asyncio = ["aiohttp (>=3.9.0)", "aiohttp-retry (>=2.9.1,<3.0.0)"]
+dev = ["beautifulsoup4 (>=4.13.3,<5.0.0)", "myst-parser (>=4.0.1,<5.0.0)", "numpy (>=1.22)", "pandas (>=1.3.5,<2.2.3) ; python_version < \"3.13\"", "pandas (>=2.2.3) ; python_version >= \"3.13\"", "pre-commit (>=3.0.0,<4.0.0)", "pytest (==8.2.0)", "pytest-asyncio (>=0.25.2,<0.26.0)", "pytest-benchmark (==5.0.0) ; python_version < \"4.0\"", "pytest-cov (==2.10.1)", "pytest-mock (==3.6.1)", "pytest-retry (>=1.7.0,<2.0.0)", "pytest-timeout (==2.2.0)", "python-dotenv (>=1.1.0,<2.0.0)", "responses (>=0.8.1)", "ruff (>=0.9.3,<0.10.0)", "sphinx (>=7.4.7,<8.0.0) ; python_version < \"3.11\"", "sphinx (>=8.2.3,<9.0.0) ; python_version >= \"3.11\"", "tuna (>=0.5.11,<0.6.0)", "urllib3-mock (==0.3.3)", "vprof (>=0.38,<0.39)"]
+grpc = ["googleapis-common-protos (>=1.66.0)", "grpcio (>=1.44.0,<1.59.0) ; python_version < \"3.11\"", "grpcio (>=1.59.0,<1.68.0) ; python_version >= \"3.11\" and python_version < \"3.13\"", "grpcio (>=1.68.0) ; python_version >= \"3.13\"", "lz4 (>=3.1.3)", "protobuf (>=5.29.5,<6.0.0)", "protoc-gen-openapiv2 (>=0.0.1,<0.1.0)"]
+types = ["grpc-stubs (>=1.53.0.3,<1.54.0.0)", "mypy (>=1.6.1,<2.0.0)", "pandas-stubs (>=2.1.1.230928,<2.2.0.0)", "types-protobuf (>=4.24.0.4,<4.25.0.0)", "types-python-dateutil (>=2.9.0.20241003)", "types-tqdm (>=4.66.0.3,<4.67.0.0)", "types-urllib3 (>=1.26.25.14,<1.27.0.0)"]
+
+[[package]]
+name = "pinecone-plugin-assistant"
+version = "3.0.1"
+description = "Assistant plugin for Pinecone SDK"
+optional = false
+python-versions = "<4.0,>=3.9"
+groups = ["main"]
+files = [
+    {file = "pinecone_plugin_assistant-3.0.1-py3-none-any.whl", hash = "sha256:cd86ca5c98137221170e90fe81e03bbe71999992096da68c77f4af3503017622"},
+    {file = "pinecone_plugin_assistant-3.0.1.tar.gz", hash = "sha256:6b00e94ef1bf55ed601d2316ee6f71f96f93bf2155277a826638395e1090dde3"},
+]
+
+[package.dependencies]
+packaging = ">=24.2,<25.0"
+requests = ">=2.32.3,<3.0.0"
+
+[[package]]
+name = "pinecone-plugin-interface"
+version = "0.0.7"
+description = "Plugin interface for the Pinecone python client"
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["main"]
+files = [
+    {file = "pinecone_plugin_interface-0.0.7-py3-none-any.whl", hash = "sha256:875857ad9c9fc8bbc074dbe780d187a2afd21f5bfe0f3b08601924a61ef1bba8"},
+    {file = "pinecone_plugin_interface-0.0.7.tar.gz", hash = "sha256:b8e6675e41847333aa13923cc44daa3f85676d7157324682dc1640588a982846"},
 ]
 
 [[package]]
@@ -4489,4 +4544,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "b250304ffdd32d65a373e00c589324d9ad2c61646dc386269496911e526d03b7"
+content-hash = "66fb57c5a99c77b591b16d848321ade1f690203e63d2041997b1812a8d574a8a"

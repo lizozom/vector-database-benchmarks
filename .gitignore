@@ -3,3 +3,4 @@ data/*
 *.pyc
 embeddings/
 converted/
+02_ingest/ingest_*_done.txt
